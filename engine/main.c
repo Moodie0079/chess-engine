@@ -140,7 +140,8 @@ void print_test(char *desc, U64 bitboard) {
     print_bitboard(bitboard);
 }
 
-int main(int argc, char *argv[]) {  // argc count of arguments, argv is an array of strings containing them. argv[0] program name, argv[1] is first argument I pass
+// argc count of arguments, argv is an array of strings containing them. argv[0] program name, argv[1] is first argument I pass
+int main(int argc, char *argv[]) {
     init_all();
    
     if (argc < 2) {  
@@ -156,3 +157,4 @@ int main(int argc, char *argv[]) {  // argc count of arguments, argv is an array
     return 0;
 }
 
+ 
