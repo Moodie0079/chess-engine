@@ -105,6 +105,7 @@ U64 generate_bishop_attacks(int square, U64 block);
 U64 generate_queen_attacks(int square, U64 block);
 
 // FUNCTIONS
+int is_square_attacked(Board *board, int square, int attacking_side);
 void init_all();
 
 #endif

@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -O2
 TARGET = engine
 
-SRCS = main.c init.c
+SRCS = main.c init.c movegen.c
 OBJS = $(SRCS:.c=.o)
 
 $(TARGET): $(OBJS)
