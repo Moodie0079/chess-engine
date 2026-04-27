@@ -14,6 +14,10 @@ typedef uint64_t U64;
 // then inverts so square is the only 0 and perfors an "AND" operation to clear that square to 0 and returns board
 #define pop_bit(bitboard, square) ((bitboard) &= ~(1ULL << (square)))
 
+// Built-in GCC functions for fast bit manipulation
+#define get_lsb_index(bitboard) __builtin_ctzll(bitboard)
+#define count_bits(bitboard) __builtin_popcountll(bitboard)
+
 
 // These are "Safety Nets" to prevent pieces from wrapping around the board.
 #define NOT_A_FILE  0xFEFEFEFEFEFEFEFEULL // In our 1D array (0-63), the last square of a row (e.g., h1/index 7) is 
@@ -106,6 +110,9 @@ U64 generate_queen_attacks(int square, U64 block);
 
 // FUNCTIONS
 int is_square_attacked(Board *board, int square, int attacking_side);
+void generate_moves(Board *board, MoveList *move_list);
+void make_move(Board *board, int move);
+void generate_legal_moves(Board *board, MoveList *legal);
 void init_all();
 
 #endif
