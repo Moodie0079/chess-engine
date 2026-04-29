@@ -1,2 +1,4 @@
 engine
+chess_engine
+*.o
 .DS_Store

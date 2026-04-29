@@ -113,6 +113,8 @@ int is_square_attacked(Board *board, int square, int attacking_side);
 void generate_moves(Board *board, MoveList *move_list);
 void make_move(Board *board, int move);
 void generate_legal_moves(Board *board, MoveList *legal);
+int evaluate(Board *board);
+int search(Board *board, int depth);
 void init_all();
 
 #endif

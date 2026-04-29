@@ -1,8 +1,8 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -O2
-TARGET = engine
+TARGET = chess_engine
 
-SRCS = main.c init.c movegen.c
+SRCS = main.c init.c movegen.c eval.c search.c
 OBJS = $(SRCS:.c=.o)
 
 $(TARGET): $(OBJS)

@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
-import { Chessboard } from "react-chessboard";
+import { Chessboard, defaultPieces } from "react-chessboard";
 
 export default function ChessGame() {
   const [game, setGame] = useState(new Chess());
   const [moveFrom, setMoveFrom] = useState<Square | null>(null);
   const [optionSquares, setOptionSquares] = useState({});
   const [isCvC, setIsCvC] = useState(false); // Toggle: Player vs Player (false) or Player vs CPU (true)
+  const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
   const moveListRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll move history to bottom
@@ -32,9 +33,10 @@ export default function ChessGame() {
 
           if (data.move) {
             const from = data.move.slice(0, 2);
-            const to = data.move.substring(2, 4);
+            const to = data.move.slice(2, 4);
+            const promotion = data.move.length > 4 ? data.move[4] : "q";
 
-            makeMove({ from, to, promotion: "q" });
+            makeMove({ from, to, promotion });
           }
         } catch (error) {
           console.error("Error fetching move from engine:", error);
@@ -46,6 +48,12 @@ export default function ChessGame() {
   }, [game, isCvC]);
 
   // --- Game Actions ---
+
+  function isPromotion(from: Square, to: Square): boolean {
+    const piece = game.get(from);
+    if (!piece || piece.type !== "p") return false;
+    return to[1] === "8" || to[1] === "1";
+  }
 
   function makeMove(move: any) {
     const gameCopy = new Chess();
@@ -73,6 +81,15 @@ export default function ChessGame() {
 
     // Attempt to move
     if (moveFrom) {
+      if (isPromotion(moveFrom, squareKey)) {
+        const legalTargets = game.moves({ square: moveFrom, verbose: true }).map(m => m.to);
+        if (legalTargets.includes(squareKey)) {
+          setPendingPromotion({ from: moveFrom, to: squareKey });
+          setMoveFrom(null);
+          setOptionSquares({});
+          return;
+        }
+      }
       const success = makeMove({
         from: moveFrom,
         to: squareKey,
@@ -110,14 +127,21 @@ export default function ChessGame() {
   }
 
   function onDrop({ sourceSquare, targetSquare }: { sourceSquare: string, targetSquare: string | null }) {
-    if (isCvC && game.turn() === "b") return false; // Prevent dragging during AI turn
+    if (isCvC && game.turn() === "b") return false;
     if (!targetSquare) return false;
-    
-    return makeMove({
-      from: sourceSquare as Square,
-      to: targetSquare as Square,
-      promotion: "q",
-    });
+
+    const from = sourceSquare as Square;
+    const to = targetSquare as Square;
+
+    if (isPromotion(from, to)) {
+      const legalTargets = game.moves({ square: from, verbose: true }).map(m => m.to);
+      if (legalTargets.includes(to)) {
+        setPendingPromotion({ from, to });
+        return false;
+      }
+    }
+
+    return makeMove({ from, to, promotion: "q" });
   }
 
   // --- Controls ---
@@ -156,7 +180,7 @@ export default function ChessGame() {
     <div className="flex flex-col md:flex-row items-center justify-center h-screen w-full bg-neutral-900 p-8 gap-8 font-sans">
       
       {/* Chessboard */}
-      <div className="w-full max-w-[600px] aspect-square shadow-2xl">
+      <div className="relative w-full max-w-[600px] aspect-square shadow-2xl">
         <Chessboard
           options={{
             position: game.fen(),
@@ -166,6 +190,41 @@ export default function ChessGame() {
             squareStyles: optionSquares,
           }}
         />
+
+        {/* Promotion picker overlay */}
+        {pendingPromotion && (() => {
+          const color = game.turn();
+          const pieces = ["q", "r", "b", "n"] as const;
+          return (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded z-10">
+              <div className="bg-neutral-800 rounded-xl p-5 shadow-2xl border border-neutral-600">
+                <p className="text-white text-center text-sm font-semibold mb-4 tracking-wide uppercase">
+                  Promote to
+                </p>
+                <div className="flex gap-3">
+                  {pieces.map(p => {
+                    const key = `${color}${p.toUpperCase()}` as keyof typeof defaultPieces;
+                    const Piece = defaultPieces[key];
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => {
+                          makeMove({ from: pendingPromotion.from, to: pendingPromotion.to, promotion: p });
+                          setPendingPromotion(null);
+                        }}
+                        className="w-16 h-16 bg-neutral-700 hover:bg-neutral-500 rounded-lg flex items-center justify-center transition-colors"
+                      >
+                        <div style={{ width: 48, height: 48 }}>
+                          <Piece svgStyle={{ width: "100%", height: "100%" }} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Controls */}

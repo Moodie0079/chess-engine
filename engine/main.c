@@ -173,58 +173,21 @@ void print_move(int move) {
                            'a' + (tgt % 8), '1' + (tgt / 8));
 }
 
-void print_move_list(MoveList *list) {
-    for (int i = 0; i < list->count; i++) {
-        printf("  ");
-        print_move(list->moves[i]);
-        printf("\n");
-    }
-    printf("  Total: %d moves\n", list->count);
-}
-
-int main(void) {
+// argc/argv: frontend calls this binary with a FEN string as argv[1]
+int main(int argc, char *argv[]) {
     init_all();
 
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <FEN>\n", argv[0]);
+        return 1;
+    }
+
     Board board;
-    MoveList moves;
+    parse_fen(argv[1], &board);
 
-    printf("\n=== Test 1: Starting position (expect 20) ===\n");
-    parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", &board);
-    print_board(&board);
-    generate_legal_moves(&board, &moves);
-    print_move_list(&moves);
-
-    printf("\n=== Test 2: En passant (white e5 pawn can capture on d6) ===\n");
-    parse_fen("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2", &board);
-    print_board(&board);
-    generate_legal_moves(&board, &moves);
-    print_move_list(&moves);
-
-    printf("\n=== Test 3: Promotion (white pawn on a7, expect 4 promotion moves) ===\n");
-    parse_fen("8/P7/8/8/8/8/8/4K2k w - - 0 1", &board);
-    print_board(&board);
-    generate_legal_moves(&board, &moves);
-    print_move_list(&moves);
-
-    printf("\n=== Test 4: Castling (white can castle both sides) ===\n");
-    parse_fen("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", &board);
-    print_board(&board);
-    generate_legal_moves(&board, &moves);
-    print_move_list(&moves);
-
-    printf("\n=== Test 5: King in check (expect 3 — king must escape rook on h1) ===\n");
-    // White king e1 checked by black rook h1; only d2, e2, f2 escape the rank-1 rook
-    parse_fen("4k3/8/8/8/8/8/8/4K2r w - - 0 1", &board);
-    print_board(&board);
-    generate_legal_moves(&board, &moves);
-    print_move_list(&moves);
-
-    printf("\n=== Test 6: Pinned rook (expect 9 — rook pinned on e-file, king has 4 escapes) ===\n");
-    // White rook e2 pinned by black rook e7; can only move along e-file (e3-e7)
-    parse_fen("4k3/4r3/8/8/8/8/4R3/4K3 w - - 0 1", &board);
-    print_board(&board);
-    generate_legal_moves(&board, &moves);
-    print_move_list(&moves);
+    int move = search(&board, 6);
+    print_move(move);
+    printf("\n");
 
     return 0;
 }
